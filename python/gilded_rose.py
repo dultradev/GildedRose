@@ -28,6 +28,27 @@ class GildedRose(object):
             if item.sell_in < 0 and item.quality < 50:
                 item.quality += 1
 
+    def _update_backstage_passes(self, item):
+        # RF-01: Diminui o prazo de venda
+        item.sell_in -= 1
+
+        # RF-14: Se o show já passou, o ingresso perde todo o valor
+        if item.sell_in < 0:
+            item.quality = 0
+            return
+
+        # RF-11: Valorização padrão (+1)
+        if item.quality < 50:
+            item.quality += 1
+
+            # RF-12: Janela crítica de 10 dias ou menos (ganha +1 adicional, totalizando +2)
+            if item.sell_in < 10 and item.quality < 50:
+                item.quality += 1
+
+            # RF-13: Janela crítica de 5 dias ou menos (ganha +1 adicional, totalizando +3)
+            if item.sell_in < 5 and item.quality < 50:
+                item.quality += 1
+
     def old_update_quality(self):
         for item in self.items:
             if item.name != "Aged Brie" and item.name != "Backstage passes to a TAFKAL80ETC concert":
