@@ -4,8 +4,20 @@ class GildedRose(object):
 
     def __init__(self, items):
         self.items = items
-
+        
     def update_quality(self):
+        # O laço principal agora apenas lê o nome e direciona para a função correta
+        for item in self.items:
+            if item.name == "Sulfuras, Hand of Ragnaros":
+                self._update_sulfuras(item)
+            elif item.name == "Aged Brie":
+                self._update_aged_brie(item)
+            elif item.name == "Backstage passes to a TAFKAL80ETC concert":
+                self._update_backstage_passes(item)
+            else:
+                self._update_common_item(item)
+
+    def old_update_quality(self):
         for item in self.items:
             if item.name != "Aged Brie" and item.name != "Backstage passes to a TAFKAL80ETC concert":
                 if item.quality > 0:
@@ -34,6 +46,7 @@ class GildedRose(object):
                 else:
                     if item.quality < 50:
                         item.quality = item.quality + 1
+
 
 
 class Item:
