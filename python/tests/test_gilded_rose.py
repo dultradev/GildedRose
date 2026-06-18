@@ -98,3 +98,31 @@ def test_backstage_passes_apos_o_show():
     gilded_rose.update_quality()
     assert items[0].sell_in == -1
     assert items[0].quality == 0
+
+def test_conjured_item_degrades_twice_as_fast_before_expiry():
+    # Item comum perderia 1 de qualidade, o Conjurado deve perder 2
+    items = [Item("Conjured Mana Cake", sell_in=10, quality=20)]
+    gilded_rose = GildedRose(items)
+    
+    gilded_rose.update_quality()
+    
+    assert items[0].sell_in == 9
+    assert items[0].quality == 18
+
+def test_conjured_item_degrades_twice_as_fast_after_expiry():
+    # Item comum vencido perderia 2 de qualidade, o Conjurado deve perder 4
+    items = [Item("Conjured Mana Cake", sell_in=0, quality=20)]
+    gilded_rose = GildedRose(items)
+    
+    gilded_rose.update_quality()
+    
+    assert items[0].sell_in == -1
+    assert items[0].quality == 16
+
+def test_conjured_item_quality_never_drops_below_zero():
+    items = [Item("Conjured Mana Cake", sell_in=5, quality=1)]
+    gilded_rose = GildedRose(items)
+    
+    gilded_rose.update_quality()
+    
+    assert items[0].quality == 0
