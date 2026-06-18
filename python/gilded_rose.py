@@ -3,7 +3,13 @@ from abc import ABC, abstractmethod
 from typing import List, Dict
 
 # ==========================================
-# --- CLASSE ITEM - RESTRIÇÃO DO GOBLIN ---
+# --- CONSTANTES DE DOMÍNIO ---
+# ==========================================
+MIN_QUALITY = 0
+MAX_QUALITY = 50
+
+# ==========================================
+# --- CLASSE ITEM (INTACTA) ---
 # ==========================================
 class Item:
     """Classe de domínio representando um item da loja.
@@ -20,80 +26,61 @@ class Item:
     def __repr__(self):
         return "%s, %s, %s" % (self.name, self.sell_in, self.quality)
 
-# =============================
-# --- STRATEGY PATTERN ---
-# =============================
+# ==========================================
+# --- STRATEGY PATTERN (OTIMIZADO) ---
+# ==========================================
 class UpdateStrategy(ABC):
     """Interface base para as estratégias de atualização de itens."""
-    
+
     @abstractmethod
     def update(self, item: Item) -> None:
-        """Atualiza a qualidade e o prazo de venda (sell_in) de um item.
-
-        Args:
-            item (Item): A instância do item a ser atualizada.
-        """
         pass
 
 
 class CommonUpdateStrategy(UpdateStrategy):
     """Estratégia de atualização para itens comuns."""
-    
     def update(self, item: Item) -> None:
         item.sell_in -= 1
-
-        if item.quality > 0:
-            item.quality -= 1
-            
-            # Se já venceu, degrada em dobro (-2 no total)
-            if item.sell_in < 0 and item.quality > 0:
-                item.quality -= 1
+        # Se sell_in < 0, degrada 2, senão 1
+        degrade_amount = 2 if item.sell_in < 0 else 1
+        # Garante matematicamente que não cai abaixo do piso (0)
+        item.quality = max(MIN_QUALITY, item.quality - degrade_amount)
 
 
 class AgedBrieUpdateStrategy(UpdateStrategy):
     """Estratégia de atualização para o item 'Aged Brie'."""
-    
     def update(self, item: Item) -> None:
         item.sell_in -= 1
-        
-        if item.quality < 50:
-            item.quality += 1
-            
-            # Se já passou do prazo, ganha qualidade em dobro
-            if item.sell_in < 0 and item.quality < 50:
-                item.quality += 1
+        # Se sell_in < 0, melhora 2, senão 1
+        increase_amount = 2 if item.sell_in < 0 else 1
+        # Garante matematicamente que não ultrapassa o teto (50)
+        item.quality = min(MAX_QUALITY, item.quality + increase_amount)
 
 
 class BackstagePassesUpdateStrategy(UpdateStrategy):
     """Estratégia de atualização para 'Backstage passes'."""
-    
     def update(self, item: Item) -> None:
         item.sell_in -= 1
 
-        # Se o show já passou, o ingresso perde todo o valor
         if item.sell_in < 0:
-            item.quality = 0
+            item.quality = MIN_QUALITY
             return
 
-        if item.quality < 50:
-            item.quality += 1
+        # Calcula o bônus baseado nas janelas de dias de forma linear
+        increase_amount = 1
+        if item.sell_in < 10:
+            increase_amount = 2
+        if item.sell_in < 5:
+            increase_amount = 3
 
-            # Janela crítica de 10 dias ou menos (ganha +1 adicional)
-            if item.sell_in < 10 and item.quality < 50:
-                item.quality += 1
-
-            # Janela crítica de 5 dias ou menos (ganha +1 adicional)
-            if item.sell_in < 5 and item.quality < 50:
-                item.quality += 1
+        item.quality = min(MAX_QUALITY, item.quality + increase_amount)
 
 
 class SulfurasUpdateStrategy(UpdateStrategy):
     """Estratégia de atualização para o item lendário 'Sulfuras'."""
-    
     def update(self, item: Item) -> None:
-        # Itens lendários não mudam prazo de validade nem qualidade
+        # Item lendário permanece intocável
         pass
-
 
 # =============================
 # --- SIMPLE FACTORY ---
