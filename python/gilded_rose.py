@@ -1,70 +1,93 @@
 # -*- coding: utf-8 -*-
 
-class GildedRose(object):
+# ==========================================
+# 🗺️ 1. INTERFACE BASE DO STRATEGY
+# ==========================================
+class UpdateStrategy:
+    def __init__(self, item):
+        self.item = item
 
+    def update_quality(self):
+        """Método abstrato/contrato que todas as subclasses devem implementar"""
+        raise NotImplementedError
+
+
+# ==========================================
+# 🧪 2. ESTRATÉGIAS ESPECIALIZADAS (SUBCLASSES)
+# ==========================================
+class StandardItemStrategy(UpdateStrategy):
+    def update_quality(self):
+        self.item.sell_in -= 1
+        if self.item.quality > 0:
+            self.item.quality -= 1
+            if self.item.sell_in < 0 and self.item.quality > 0:
+                self.item.quality -= 1
+
+
+class AgedBrieStrategy(UpdateStrategy):
+    def update_quality(self):
+        self.item.sell_in -= 1
+        if self.item.quality < 50:
+            self.item.quality += 1
+            if self.item.sell_in < 0 and self.item.quality < 50:
+                self.item.quality += 1
+
+
+class BackstagePassStrategy(UpdateStrategy):
+    def update_quality(self):
+        self.item.sell_in -= 1
+        if self.item.sell_in < 0:
+            self.item.quality = 0
+            return
+
+        if self.item.quality < 50:
+            self.item.quality += 1
+            if self.item.sell_in < 10 and self.item.quality < 50:
+                self.item.quality += 1
+            if self.item.sell_in < 5 and self.item.quality < 50:
+                self.item.quality += 1
+
+
+class SulfurasStrategy(UpdateStrategy):
+    def update_quality(self):
+        # Item lendário não altera prazo nem qualidade
+        pass
+
+
+# ==========================================
+# 🏭 3. FABRICA DE ESTRATÉGIAS (SIMPLE FACTORY)
+# ==========================================
+class ItemStrategyFactory:
+    _STRATEGIES = {
+        "Aged Brie": AgedBrieStrategy,
+        "Backstage passes to a TAFKAL80ETC concert": BackstagePassStrategy,
+        "Sulfuras, Hand of Ragnaros": SulfurasStrategy
+    }
+
+    @classmethod
+    def create(cls, item):
+        # Se o nome do item estiver mapeado, usa a estratégia dele; caso contrário, é um item comum.
+        strategy_class = cls._STRATEGIES.get(item.name, StandardItemStrategy)
+        return strategy_class(item)
+
+
+# ==========================================
+# 🏰 4. CLASSE PRINCIPAL (PONTO DE ENTRADA LEGADO)
+# ==========================================
+class GildedRose(object):
     def __init__(self, items):
         self.items = items
 
     def update_quality(self):
-        # O laço principal agora apenas lê o nome e direciona para a função correta
+        # O método central agora é 100% polimórfico e livre de checagens de string!
         for item in self.items:
-            if item.name == "Sulfuras, Hand of Ragnaros":
-                self._update_sulfuras(item)
-            elif item.name == "Aged Brie":
-                self._update_aged_brie(item)
-            elif item.name == "Backstage passes to a TAFKAL80ETC concert":
-                self._update_backstage_passes(item)
-            else:
-                self._update_common_item(item)
+            strategy = ItemStrategyFactory.create(item)
+            strategy.update_quality()
 
-    def _update_aged_brie(self, item):
-        # RF-01 & RF-06: Diminui o prazo de venda e aumenta a qualidade
-        item.sell_in -= 1
-        
-        if item.quality < 50:
-            item.quality += 1
-            
-            # RF-07: Se já passou do prazo, ganha qualidade em dobro
-            if item.sell_in < 0 and item.quality < 50:
-                item.quality += 1
 
-    def _update_backstage_passes(self, item):
-        # RF-01: Diminui o prazo de venda
-        item.sell_in -= 1
-
-        # RF-14: Se o show já passou, o ingresso perde todo o valor
-        if item.sell_in < 0:
-            item.quality = 0
-            return
-
-        # RF-11: Valorização padrão (+1)
-        if item.quality < 50:
-            item.quality += 1
-
-            # RF-12: Janela crítica de 10 dias ou menos (ganha +1 adicional, totalizando +2)
-            if item.sell_in < 10 and item.quality < 50:
-                item.quality += 1
-
-            # RF-13: Janela crítica de 5 dias ou menos (ganha +1 adicional, totalizando +3)
-            if item.sell_in < 5 and item.quality < 50:
-                item.quality += 1
-
-    def _update_common_item(self, item):
-        # RF-01: Diminui o prazo de venda
-        item.sell_in -= 1
-
-        # RF-02 & RF-04: Degradação padrão respeitando o piso de 0
-        if item.quality > 0:
-            item.quality -= 1
-            
-            # RF-03: Se já venceu, degrada em dobro (-2 no total)
-            if item.sell_in < 0 and item.quality > 0:
-                item.quality -= 1
-
-    def _update_sulfuras(self, item):
-        # RF-11.1, RF-11.2, RF-11.3: Itens lendários não mudam nada
-        pass
-
+# ==========================================
+# ⚠️ CLASSE ITEM INTACTA (RESTRIÇÃO DO GOBLIN)
+# ==========================================
 class Item:
     def __init__(self, name, sell_in, quality):
         self.name = name
