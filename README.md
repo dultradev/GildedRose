@@ -1,55 +1,128 @@
-_Support this and all my katas via [Patreon](https://www.patreon.com/EmilyBache)_
-
 # Gilded Rose Refactoring Kata
 
-You can find out more about this exercise in my YouTube video [Why Developers LOVE The Gilded Rose Kata](https://youtu.be/Mt4XpGxigT4). I also have a video of a worked solution in Java - [Gilded Rose Kata, Hands-on](https://youtu.be/OdnV8hc9L7I)
+> Refatoração completa de um script procedural legado em um sistema desacoplado, extensível e de alta performance — usando **Arquitetura Limpa** e **Padrões de Projeto GoF**.
 
-I use this kata as part of my work as a technical coach. I wrote a lot about the coaching method I use in this book [Technical Agile Coaching with the Samman method](https://leanpub.com/techagilecoach). A while back I wrote this article ["Writing Good Tests for the Gilded Rose Kata"](http://coding-is-like-cooking.info/2013/03/writing-good-tests-for-the-gilded-rose-kata/) about how you could use this kata in a [coding dojo](https://leanpub.com/codingdojohandbook).
+📄 **Documentação completa** (decisões arquiteturais, diário de bordo, relatórios de auditoria):
+[Notion — Gilded Rose Kata](https://brainy-manchego-171.notion.site/Gilded-Rose-Refactoring-Kata-371486a71eae80e59c7dedc0bb75c9c2)
 
+---
 
-## How to use this Kata
+## Estrutura de Pastas
 
-The simplest way is to just clone the code and start hacking away improving the design. You'll want to look at the ["Gilded Rose Requirements"](https://github.com/emilybache/GildedRose-Refactoring-Kata/blob/main/GildedRoseRequirements.md) which explains what the code is for. I strongly advise you that you'll also need some tests if you want to make sure you don't break the code while you refactor.
+O projeto segue os princípios da Arquitetura Limpa, separando estritamente o **Domínio** (regras puras de negócio), os **Casos de Uso** (orquestração) e a **Infraestrutura** (adaptadores e ponto de entrada legado).
 
-You could write some unit tests yourself, using the requirements to identify suitable test cases. I've provided a failing unit test in a popular test framework as a starting point for most languages.
+```text
+gildedrose/
+├── src/
+│   ├── domain/
+│   │   ├── constants.py               # Limites globais (MAX_QUALITY, MIN_QUALITY)
+│   │   ├── entities.py                # Entidade Item (legada/preservada)
+│   │   └── strategies/
+│   │       ├── base.py                # Interface abstrata UpdateStrategy
+│   │       ├── aged_brie.py
+│   │       ├── backstage_passes.py
+│   │       ├── common.py
+│   │       ├── conjured.py            # Fase 5 — item Conjured
+│   │       └── sulfuras.py
+│   │
+│   ├── use_cases/
+│   │   ├── factory.py                 # Fábrica polimórfica com Flyweight Cache
+│   │   └── update_inventory.py        # Caso de uso principal
+│   │
+│   └── infrastructure/
+│       └── gilded_rose_adapter.py
+│
+├── tests/
+│   ├── test_gilded_rose.py            # Testes unitários e de regressão
+│   ├── test_conjured.py               # Testes específicos do item Conjured
+│   └── approved_files/                # Artefatos do Golden Master (Approval Tests)
+│
+├── gilded_rose.py                     # Facade / ponto de entrada legado
+├── texttest_fixture.py                # Simulação interativa por linha de comando
+└── requirements.txt
+```
 
-Alternatively, use the Approval tests provided in this repository. (Read more about that in the section "Text-based Approval Testing").
+---
 
-The idea of the exercise is to do some deliberate practice, and improve your skills at designing test cases and refactoring. The idea is not to re-write the code from scratch, but rather to practice taking small steps, running the tests often, and incrementally improving the design. 
+## Decisões de Design
 
-### Gilded Rose Requirements in other languages 
+### 1. Cláusulas de Guarda
 
-- [English](GildedRoseRequirements.md)
-- [Español](GildedRoseRequirements_es.md)
-- [Français](GildedRoseRequirements_fr.md)
-- [Italiano](GildedRoseRequirements_it.md)
-- [日本語](GildedRoseRequirements_jp.md)
-- [Português](GildedRoseRequirements_pt-BR.md)
-- [Русский](GildedRoseRequirements_ru.md)
-- [Українська](GildedRoseRequirements_ua.md)
-- [ไทย](GildedRoseRequirements_th.md)
-- [中文](GildedRoseRequirements_zh.txt)
-- [한국어](GildedRoseRequirements_kr.md)
-- [German](GildedRoseRequirements_de.md)
-- [Euskara](GildedRoseRequirements_eu.md)
-- [Galego](GildedRoseRequirements_gl.md)
+O aninhamento profundo de `if/else` foi substituído por validações e retornos antecipados. Isso eliminou a complexidade ciclomática e tornou os limites de qualidade (`0` e `50`) explícitos logo na entrada do fluxo.
 
-## Text-Based Approval Testing
+### 2. Padrão Strategy
 
-Most language versions of this code have a [TextTest](https://texttest.org) fixture for Approval testing. For information about this, see the [TextTests README](https://github.com/emilybache/GildedRose-Refactoring-Kata/tree/main/texttests)
+Toda a lógica de atualização foi extraída para classes especialistas que herdam de `UpdateStrategy`. A classe principal deixou de acumular o conhecimento de todos os tipos de item, respeitando o **SRP (Single Responsibility Principle)**.
 
-## History of the exercise
+### 3. Flyweight Cache na Fábrica
 
-This Kata was originally created by Terry Hughes (http://twitter.com/TerryHughes). It is already on GitHub [here](https://github.com/NotMyself/GildedRose). Bobby Johnson described the kata in an article titled "Refactor This: The Gilded Rose Kata", but unfortunately it is no longer on the internet. I found it on the Wayback Machine [here](https://web.archive.org/web/20240525015111/https://iamnotmyself.com/refactor-this-the-gilded-rose-kata/).
+A `ItemStrategyFactory` utiliza o padrão Flyweight: estratégias são *stateless* e instanciadas uma única vez, sendo reutilizadas via `_flyweight_cache`. Isso reduz pressão no Garbage Collector em inventários grandes.
 
-I translated the original C# into a few other languages, (with a little help from my friends!), and slightly changed the starting position. This means I've actually done a small amount of refactoring already compared with the original form of the kata, and made it easier to get going with writing tests by giving you one failing unit test to start with. I also added test fixtures for Text-Based approval testing with TextTest (see [the TextTests](https://github.com/emilybache/GildedRose-Refactoring-Kata/tree/main/texttests))
+### 4. Matching por Substring vs. Match Exato
 
-As Bobby Johnson points out in his article "Why Most Solutions to Gilded Rose Miss The Bigger Picture" (on the Wayback Machine [here](https://web.archive.org/web/20230530152324/https://iamnotmyself.com/why-most-solutions-to-gilded-rose-miss-the-bigger-picture/)), it'll actually give you
-better practice at handling a legacy code situation if you do this Kata in the original C#. However, I think this kata
-is also really useful for practicing writing good tests using different frameworks and approaches, and the small changes I've made help with that. I think it's also interesting to compare what the refactored code and tests look like in different programming languages.
+A fábrica distingue dois comportamentos na resolução de estratégias:
 
-## Contributing
+- **Substring (`in`):** usado para `"Aged Brie"`, `"Backstage passes"` e `"Conjured"` — permite que novos produtos da mesma categoria sejam criados sem alterar o código.
+- **Match exato (`==`):** reservado para `"Sulfuras, Hand of Ragnaros"` — evita que réplicas recebam indevidamente os privilégios de um item lendário único.
 
-I have been struggling for some time with the maintenance burden for the Gilded Rose respository. I get frequent spurious pull requests from people who have been assigned to work on it as an exercise by some other organization (I don't know who) and mistakenly send me a pull request with their solution. I get so many of these it's a significant amount of work to check that they aren't a legitimate contribution. It's really annoying. I have sadly now added a restriction now so that only prior contributors can now open issues, comment, or create pull requests.
+### 5. Princípio Aberto/Fechado na Prática
 
-If you would like to make an actual contribution that improves the starting position of the exercise, please see [CONTRIBUTING.md](./CONTRIBUTING.md) for some ideas about how to get involved.
+A adição do item **Conjured** (Fase 5) validou a arquitetura: foi necessário apenas criar uma nova classe de estratégia e adicionar uma entrada na fábrica. **Nenhuma linha de regra existente foi alterada**, eliminando o risco de regressão.
+
+---
+
+## Executando o Projeto
+
+### Pré-requisitos
+
+- Python 3.10+
+- `venv` disponível no PATH
+
+```bash
+python --version  # deve retornar 3.10 ou superior
+```
+
+### Setup
+
+```bash
+git clone <url-do-repositorio>
+cd gildedrose
+
+# Linux / macOS
+python3 -m venv venv && source venv/bin/activate
+
+# Windows (PowerShell)
+python -m venv venv; .\venv\Scripts\Activate.ps1
+
+pip install -r requirements.txt
+```
+
+### Rodando os Testes
+
+```bash
+pytest
+```
+
+### Simulação de Inventário
+
+```bash
+python texttest_fixture.py 30  # simula 30 dias
+```
+
+---
+
+## Cobertura de Testes
+
+| Tipo | Quantidade | Descrição |
+|------|-----------|-----------|
+| Regressão histórica | 12 | Limites e comportamentos do código original |
+| Expansão (Conjured) | 3 | Comportamento e travas do novo item |
+| Approval Test global | 1 | Validação da saída completa contra o Golden Master |
+
+---
+
+## Tecnologias
+
+- **Python 3.10+**
+- **pytest** — testes unitários e de regressão
+- **approvaltests** — Golden Master / Approval Tests
