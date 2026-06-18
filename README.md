@@ -85,7 +85,7 @@ python --version  # deve retornar 3.10 ou superior
 ### Setup
 
 ```bash
-git clone <url-do-repositorio>
+git clone (https://github.com/dultradev/GildedRose/tree/develop)
 cd gildedrose
 
 # Linux / macOS
