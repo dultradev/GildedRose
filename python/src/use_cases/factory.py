@@ -5,21 +5,43 @@ from src.domain.strategies.common import CommonUpdateStrategy
 from src.domain.strategies.aged_brie import AgedBrieUpdateStrategy
 from src.domain.strategies.backstage_passes import BackstagePassesUpdateStrategy
 from src.domain.strategies.sulfuras import SulfurasUpdateStrategy
+from src.domain.strategies.conjured import ConjuredUpdateStrategy
 
 class ItemStrategyFactory:
-    """Fábrica responsável por fornecer a estratégia correta baseada no item."""
+    """Fábrica polimórfica que gerencia e distribui as estratégias de atualização.
     
-    # Instanciamos as estratégias uma única vez no nível da classe 
-    # (Flyweight) já que elas não mantêm estado interno.
-    _strategies: Dict[str, UpdateStrategy] = {
-        "Aged Brie": AgedBrieUpdateStrategy(),
-        "Backstage passes to a TAFKAL80ETC concert": BackstagePassesUpdateStrategy(),
-        "Sulfuras, Hand of Ragnaros": SulfurasUpdateStrategy(),
+    Utiliza um dicionário interno para garantir o reuso de instâncias (Flyweight).
+    """
+    
+    # O dicionário agora funciona estritamente como o cache de instâncias únicas (Flyweight)
+    _flyweight_cache: Dict[str, UpdateStrategy] = {
+        "brie": AgedBrieUpdateStrategy(),
+        "sulfuras": SulfurasUpdateStrategy(),
+        "passes": BackstagePassesUpdateStrategy(),
+        "conjured": ConjuredUpdateStrategy()
     }
     
     _default_strategy: UpdateStrategy = CommonUpdateStrategy()
 
     @classmethod
     def get_strategy(cls, item_name: str) -> UpdateStrategy:
-        """Obtém a estratégia de atualização apropriada para o nome do item."""
-        return cls._strategies.get(item_name, cls._default_strategy)
+        """Determina a estratégia analisando substrings (categorias) e matches exatos (itens únicos)."""
+        if not item_name:
+            return cls._default_strategy
+
+        # 1. Avaliação de Categorias por Substring (Aberto para Expansão)
+        if "Aged Brie" in item_name:
+            return cls._flyweight_cache["brie"]
+
+        if "Backstage passes" in item_name:
+            return cls._flyweight_cache["passes"]
+            
+        if "Conjured" in item_name:
+            return cls._flyweight_cache["conjured"]
+
+        # 2. Match Exato para Itens Lendários Únicos
+        if item_name == "Sulfuras, Hand of Ragnaros":
+            return cls._flyweight_cache["sulfuras"]
+
+        # 3. Fallback para itens comuns
+        return cls._default_strategy
