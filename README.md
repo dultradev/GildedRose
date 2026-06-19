@@ -1,6 +1,7 @@
 # Gilded Rose Refactoring Kata
 
 > Refatoração completa de um script procedural legado em um sistema desacoplado, extensível e de alta performance — usando **Arquitetura Limpa** e **Padrões de Projeto GoF**.
+> Grupo: Carlos Eduardo, Marcos Paulo, Rafael Guerra, Rian Dultra e Vinícius Fernandes.
 
 📄 **Documentação completa** (decisões arquiteturais, diário de bordo, relatórios de auditoria):
 [Notion — Gilded Rose Kata](https://brainy-manchego-171.notion.site/Gilded-Rose-Refactoring-Kata-371486a71eae80e59c7dedc0bb75c9c2)
