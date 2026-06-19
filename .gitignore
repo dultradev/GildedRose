@@ -9,3 +9,10 @@ vendor
 venv
 **/DS_Store/*
 **/.DS_Store/*
+.DS_Store.DS_Store
+**/.DS_Store
+# Coverage reports
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
