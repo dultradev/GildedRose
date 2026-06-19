@@ -1,6 +1,7 @@
 # Gilded Rose Refactoring Kata
 
 > Refatoração completa de um script procedural legado em um sistema desacoplado, extensível e de alta performance — usando **Arquitetura Limpa** e **Padrões de Projeto GoF**.
+
 > Grupo: Carlos Eduardo, Marcos Paulo, Rafael Guerra, Rian Dultra e Vinícius Fernandes.
 
 📄 **Documentação completa** (decisões arquiteturais, diário de bordo, relatórios de auditoria):
