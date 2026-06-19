@@ -37,6 +37,13 @@ gildedrose/
 │   ├── test_conjured.py               # Testes específicos do item Conjured
 │   └── approved_files/                # Artefatos do Golden Master (Approval Tests)
 │
+├── docs/
+│   ├── codesmells.md                   # Code Smells encontrados
+│   ├── contigencyplan.md               # Plano de contigência
+│   ├── risks.md                        # Riscos possíveis
+│   └── requisitos.md                   # RF's e RNF'S
+│   └── testimages/                     # Prints dos Testes
+│
 ├── gilded_rose.py                     # Facade / ponto de entrada legado
 ├── texttest_fixture.py                # Simulação interativa por linha de comando
 └── requirements.txt
